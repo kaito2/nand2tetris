@@ -14,4 +14,19 @@ CHIP FullAdder {
 
     PARTS:
     // Put you code here:
+    Not(in=a, out=nota);
+    Not(in=b, out=notb);
+    Not(in=c, out=notc);
+
+    Xor(a=a, b=b, out=xors);
+    Not(in=xors, out=notxors);
+    And(a=c, b=notxors, out=tmps1);
+    And(a=notc, b=xors, out=tmps2);
+    Or(a=tmps1, b=tmps2, out=sum);
+
+    And(a=c, b=a, out=tmpc1);
+    And(a=c, b=b, out=tmpc2);
+    And(a=a, b=b, out=tmpc3);
+    Or(a=tmpc1, b=tmpc2, out=tmpcout);
+    Or(a=tmpcout, b=tmpc3, out=carry);
 }
