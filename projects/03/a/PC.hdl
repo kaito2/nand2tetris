@@ -17,4 +17,16 @@ CHIP PC {
 
     PARTS:
     // Put your code here:
+    // レジスターの出力をインクリメントするか
+    Add16(a=regout, b[0]=inc, out=addout);
+    // inputの値を採用するかどうか
+    Mux16(a=addout, b=in, sel=load, out=muxout1);
+    // リセットするかどうか
+    Mux16(a=muxout1, b=false, sel=reset, out=muxout);
+
+    // いずれかのフラグがセットされていたら値が更新されるので load を立てる
+    Or(a=load, b=inc, out=tmpFlagIsSet);
+    Or(a=reset, b=tmpFlagIsSet, out=flagIsSet);
+
+    Register(in=muxout, load=flagIsSet, out=out, out=regout);
 }
