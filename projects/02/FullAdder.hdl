@@ -14,6 +14,8 @@ CHIP FullAdder {
 
     PARTS:
     // Put you code here:
+    /*
+    // my answer...
     Not(in=a, out=nota);
     Not(in=b, out=notb);
     Not(in=c, out=notc);
@@ -29,4 +31,11 @@ CHIP FullAdder {
     And(a=a, b=b, out=tmpc3);
     Or(a=tmpc1, b=tmpc2, out=tmpcout);
     Or(a=tmpcout, b=tmpc3, out=carry);
+    */
+    // user half adder
+
+    HalfAdder(a=a, b=b, sum=tmpsum, carry=tmpcarry1);
+    HalfAdder(a=c, b=tmpsum, sum=sum, carry=tmpcarry2);
+    Or(a=tmpcarry1, b=tmpcarry2, out=carry);
+
 }
