@@ -12,3 +12,23 @@
 // the screen should remain fully clear as long as no key is pressed.
 
 // Put your code here.
+
+(LOOP)
+@24576
+D=M
+@BLACK
+D;JNE
+
+// TODO: whiten all pixels
+@16384
+M=0
+@LOOP
+0;JMP
+
+(BLACK)
+// TODO: blacken all pixels
+@16384
+M=!M
+
+@LOOP
+0;JMP
