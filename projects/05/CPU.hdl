@@ -40,4 +40,40 @@ CHIP CPU {
 
     PARTS:
     // Put your code here:
+    // 直接接続
+    And(a=instruction[15], b=instruction[3], out=writeM);
+    // ALU output or instruction
+    Mux16(a=instruction, b=aluout, sel=instruction[15], out=muxout1);
+    // A
+    Not(in=instruction[15], out=noti);
+    Or(a=instruction[5], b=noti, out=loada);
+    ARegister(in=muxout1, load=loada, out=aout, out[0..14]=addressM);
+    // A or inM
+    Mux16(a=aout, b=inM, sel=instruction[12], out=muxout2);
+
+    // D
+    // A命令の際は読み込まない (d2 and i)
+    And(a=instruction[4], b=instruction[15], out=loadd);
+    DRegister(in=aluout, load=loadd, out=dout);
+
+    // ALU
+    ALU(x=dout, y=muxout2, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluout, out=outM, zr=tmpzr, ng=tmpng);
+
+    // judge jump
+    // j1 and ng
+    And(a=instruction[2], b=tmpng, out=tmpjump1);
+    // j2 and zr
+    And(a=instruction[1], b=tmpzr, out=tmpjump2);
+    // j3 and not (ng or zr)
+    Or(a=tmpng, b=tmpzr, out=ngorzr);
+    Not(in=ngorzr, out=notngorzr);
+    And(a=instruction[0], b=notngorzr, out=tmpjump3);
+    // jump is needed ?
+    Or(a=tmpjump1, b=tmpjump2, out=tmpjump12);
+    Or(a=tmpjump12, b=tmpjump3, out=jump);
+    // A命令ならジャンプしない (C命令ならする)
+    And(a=jump, b=instruction[15], out=cjump);
+
+    // inc は true でいい??
+    PC(in=aout, load=cjump, inc=true, reset=reset, out[0..14]=pc);
 }
