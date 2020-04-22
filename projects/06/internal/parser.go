@@ -1,5 +1,11 @@
 package internal
 
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
+
 type CommandType int
 
 const (
@@ -8,18 +14,33 @@ const (
 	LCommand
 )
 
-type Parser struct{}
-
-func NewParser() Parser {
-	return Parser{}
+type Parser struct {
+	scanner        *bufio.Scanner
+	currentCommand string
 }
 
-func hasMoreCommand() bool {
+func NewParser(filename string) (Parser, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return Parser{}, fmt.Errorf("failed to os.Open: %w", err)
+	}
+	// defer f.Close()
+	buf := bufio.NewScanner(f)
+	return Parser{scanner: buf, currentCommand: ""}, nil
+}
+
+// p.scanner.Scan() returns hasMoreCommand (line) or not
+func (p Parser) hasMoreCommand() bool {
 	panic("not implemented")
 }
 
-func advance() {
-	panic("not implemented")
+func (p *Parser) advance() bool {
+	// doesn't have more command
+	if !p.scanner.Scan() {
+		return false
+	}
+	p.currentCommand = p.scanner.Text()
+	return true
 }
 
 func commandType() CommandType {
