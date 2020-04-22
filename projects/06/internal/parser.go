@@ -43,12 +43,22 @@ func (p *Parser) advance() bool {
 	return true
 }
 
-func commandType() CommandType {
-	panic("not implemented")
+func commandType(cmd string) CommandType {
+	if rune(cmd[0]) == '@' {
+		return ACommand
+	}
+	if rune(cmd[0]) == '(' {
+		return LCommand
+	}
+	return CCommand
 }
 
-func symbol() string {
-	panic("not implemented")
+func symbol(cmd string) string {
+	if rune(cmd[0]) == '@' {
+		return cmd[1:]
+	}
+	// remove '(' and ')'
+	return cmd[1 : len(cmd)-1]
 }
 
 func dest() string {

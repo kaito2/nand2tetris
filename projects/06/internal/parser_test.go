@@ -37,3 +37,40 @@ func Test_advance(t *testing.T) {
 	hasMoreCommand := p.advance()
 	assert.False(t, hasMoreCommand)
 }
+
+func Test_commandType(t *testing.T) {
+	cases := []struct {
+		input string
+		want  CommandType
+	}{
+		{"@2", ACommand},
+		{"D=A", CCommand},
+		{"@3", ACommand},
+		{"D=D+A", CCommand},
+		{"@0", ACommand},
+		{"M=D", CCommand},
+		{"(Loop)", LCommand},
+		{"(Xxx)", LCommand},
+	}
+
+	for _, c := range cases {
+		got := commandType(c.input)
+		assert.Equal(t, c.want, got)
+	}
+}
+
+func Test_symbol(t *testing.T) {
+	cases := []struct {
+		input string
+		want  string
+	}{
+		{"@2", "2"},
+		{"@Xxx", "Xxx"},
+		{"(Xxx)", "Xxx"},
+	}
+
+	for _, c := range cases {
+		got := symbol(c.input)
+		assert.Equal(t, c.want, got)
+	}
+}
