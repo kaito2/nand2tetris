@@ -2,24 +2,35 @@ package internal
 
 import (
 	"fmt"
-	"log"
+	"os"
 	"strconv"
 	"strings"
 )
 
-func Parse(filename string) {
+func Parse(filename, binFilename string) error {
 	parser, err := NewParser(filename)
 	if err != nil {
-		log.Fatalf("Failed to get new parser: %v", err)
+		return fmt.Errorf("failed to get new parser: %w", err)
 	}
 	defer parser.close()
 
+	binFile, err := os.Create(binFilename)
+	if err != nil {
+		return fmt.Errorf("failed to os.Open: %w", err)
+	}
+	defer binFile.Close()
+
 	for parser.advance() {
 		b, isParsed := parseCommand(parser.currentCommand)
-		if isParsed {
-			fmt.Printf("%016b\n", b)
+		if !isParsed {
+			continue
+		}
+		_, err := binFile.WriteString(fmt.Sprintf("%016b\n", b))
+		if err != nil {
+			return err
 		}
 	}
+	return nil
 }
 
 func parseCommand(cmd string) (uint16, bool) {
