@@ -51,6 +51,8 @@ func Test_commandType(t *testing.T) {
 		{"M=D", CCommand},
 		{"(Loop)", LCommand},
 		{"(Xxx)", LCommand},
+		{"D;JGT ", CCommand},
+		{"0;JMP", CCommand},
 	}
 
 	for _, c := range cases {
@@ -71,6 +73,24 @@ func Test_symbol(t *testing.T) {
 
 	for _, c := range cases {
 		got := symbol(c.input)
+		assert.Equal(t, c.want, got)
+	}
+}
+
+func Test_dest(t *testing.T) {
+	cases := []struct {
+		input string
+		want  string
+	}{
+		{"D=A", "D"},
+		{"D=D+A", "D"},
+		{"M=D", "M"},
+		{"D;JGT ", DestNull},
+		{"0;JMP", DestNull},
+	}
+
+	for _, c := range cases {
+		got := dest(c.input)
 		assert.Equal(t, c.want, got)
 	}
 }

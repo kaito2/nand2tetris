@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type CommandType int
@@ -12,6 +13,10 @@ const (
 	ACommand CommandType = iota
 	CCommand
 	LCommand
+)
+
+const (
+	DestNull = "null"
 )
 
 type Parser struct {
@@ -61,8 +66,12 @@ func symbol(cmd string) string {
 	return cmd[1 : len(cmd)-1]
 }
 
-func dest() string {
-	panic("not implemented")
+func dest(cmd string) string {
+	if !strings.Contains(cmd, "=") {
+		return DestNull
+	}
+	// return 1 operand
+	return strings.Split(cmd, "=")[0]
 }
 
 func comp() string {
