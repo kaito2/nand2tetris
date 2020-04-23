@@ -21,6 +21,7 @@ const (
 )
 
 type Parser struct {
+	file           *os.File
 	scanner        *bufio.Scanner
 	currentCommand string
 }
@@ -32,7 +33,7 @@ func NewParser(filename string) (Parser, error) {
 	}
 	// defer f.Close()
 	buf := bufio.NewScanner(f)
-	return Parser{scanner: buf, currentCommand: ""}, nil
+	return Parser{file: f, scanner: buf, currentCommand: ""}, nil
 }
 
 // p.scanner.Scan() returns hasMoreCommand (line) or not
@@ -89,4 +90,8 @@ func jump(cmd string) string {
 		return JumpNull
 	}
 	return strings.Split(cmd, ";")[1]
+}
+
+func (p *Parser) close() error {
+	return p.file.Close()
 }

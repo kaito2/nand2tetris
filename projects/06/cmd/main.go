@@ -1,7 +1,8 @@
 package main
 
-import "fmt"
+import "github.com/kaito2/nand2tetris/internal"
 
 func main() {
-	fmt.Println("hello world !")
+	filename := "sample-data/max/MaxL.asm"
+	internal.Parse(filename)
 }
