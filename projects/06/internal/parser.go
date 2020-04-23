@@ -17,6 +17,7 @@ const (
 
 const (
 	DestNull = "null"
+	JumpNull = "null"
 )
 
 type Parser struct {
@@ -83,6 +84,9 @@ func comp(cmd string) string {
 	return strings.Split(cmd, ";")[0]
 }
 
-func jump() string {
-	panic("not implemented")
+func jump(cmd string) string {
+	if !strings.Contains(cmd, ";") {
+		return JumpNull
+	}
+	return strings.Split(cmd, ";")[1]
 }

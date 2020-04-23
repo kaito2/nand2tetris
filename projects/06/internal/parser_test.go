@@ -113,3 +113,22 @@ func Test_comp(t *testing.T) {
 		assert.Equal(t, c.want, got)
 	}
 }
+
+func Test_jump(t *testing.T) {
+	cases := []struct {
+		input string
+		want  string
+	}{
+		{"D=A", JumpNull},
+		{"D=D+A", JumpNull},
+		{"M=D", JumpNull},
+		{"D;JGT", "JGT"},
+		{"0;JMP", "JMP"},
+		{"M=!M", JumpNull},
+	}
+
+	for _, c := range cases {
+		got := jump(c.input)
+		assert.Equal(t, c.want, got)
+	}
+}
