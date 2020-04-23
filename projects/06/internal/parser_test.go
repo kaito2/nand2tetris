@@ -94,3 +94,22 @@ func Test_dest(t *testing.T) {
 		assert.Equal(t, c.want, got)
 	}
 }
+
+func Test_comp(t *testing.T) {
+	cases := []struct {
+		input string
+		want  string
+	}{
+		{"D=A", "A"},
+		{"D=D+A", "D+A"},
+		{"M=D", "D"},
+		{"D;JGT ", "D"},
+		{"0;JMP", "0"},
+		{"M=!M", "!M"},
+	}
+
+	for _, c := range cases {
+		got := comp(c.input)
+		assert.Equal(t, c.want, got)
+	}
+}

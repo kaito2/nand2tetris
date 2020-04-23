@@ -74,8 +74,13 @@ func dest(cmd string) string {
 	return strings.Split(cmd, "=")[0]
 }
 
-func comp() string {
-	panic("not implemented")
+func comp(cmd string) string {
+	// e.g. "D=M"
+	if strings.Contains(cmd, "=") {
+		return strings.Split(cmd, "=")[1]
+	}
+	// e.g. "D;JMP"
+	return strings.Split(cmd, ";")[0]
 }
 
 func jump() string {
