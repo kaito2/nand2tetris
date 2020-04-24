@@ -7,19 +7,31 @@ import (
 	"strings"
 )
 
-func Parse(filename, binFilename string) error {
-	parser, err := NewParser(filename)
-	if err != nil {
-		return fmt.Errorf("failed to get new parser: %w", err)
-	}
-	defer parser.close()
+var symbolParser SymbolParser
+var ramCount uint16
 
+func Parse(filename, binFilename string) error {
+	// ファイル用意
 	binFile, err := os.Create(binFilename)
 	if err != nil {
 		return fmt.Errorf("failed to os.Open: %w", err)
 	}
 	defer binFile.Close()
 
+	// ラベル (e.g. '(Xxx)') をスキャン
+	symbolParser = NewSymbolParser(filename)
+	if err := symbolParser.ScanLCommands(); err != nil {
+		return fmt.Errorf("failed to ScanLCommand: %w", err)
+	}
+
+	// 命令をパース
+	// RAMの15までは定義済みシンボル
+	ramCount = 16
+	parser, err := NewParser(filename)
+	if err != nil {
+		return fmt.Errorf("failed to get new parser: %w", err)
+	}
+	defer parser.close()
 	// 行を読み出してはパース
 	for parser.advance() {
 		b, incrementPC := parseCommand(parser.currentCommand)
@@ -39,14 +51,15 @@ func parseCommand(cmd string) (uint16, bool) {
 	if isSkipped(whitespaceRemovedCommand) {
 		return 0, false
 	}
-	switch commandType(whitespaceRemovedCommand) {
+	commentRemovedCommand := removeComment(whitespaceRemovedCommand)
+	switch commandType(commentRemovedCommand) {
 	case ACommand:
-		return parseACommand(whitespaceRemovedCommand), true
+		return parseACommand(commentRemovedCommand), true
 	case CCommand:
-		return parseCCommand(whitespaceRemovedCommand), true
+		return parseCCommand(commentRemovedCommand), true
 	default: // LCommand
-		// TODO: implement
-		panic("not implemented")
+		// do nothing when LCommand
+		return 0, false
 	}
 }
 
@@ -57,9 +70,17 @@ func parseACommand(cmd string) uint16 {
 	if err == nil {
 		return uint16(num)
 	}
-	// symbol is not digit
-	// TODO: symbol を 数値に変更したものを返すように変更
-	return uint16(num)
+	// TODO: symbolParser がグローバル変数になっているので修正
+	address, ok := symbolParser.getAddress(symbol)
+	if ok {
+		return address
+	} else {
+		// TODO: error handling
+		symbolParser.addSymbol(symbol, ramCount)
+		ret := ramCount
+		ramCount++
+		return ret
+	}
 }
 
 func parseCCommand(cmd string) uint16 {
@@ -72,6 +93,10 @@ func parseCCommand(cmd string) uint16 {
 
 func removeWhitespace(line string) string {
 	return strings.Replace(line, " ", "", -1)
+}
+
+func removeComment(cmd string) string {
+	return strings.Split(cmd, "//")[0]
 }
 
 func isSkipped(line string) bool {
