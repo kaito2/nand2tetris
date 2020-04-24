@@ -20,9 +20,10 @@ func Parse(filename, binFilename string) error {
 	}
 	defer binFile.Close()
 
+	// 行を読み出してはパース
 	for parser.advance() {
-		b, isParsed := parseCommand(parser.currentCommand)
-		if !isParsed {
+		b, incrementPC := parseCommand(parser.currentCommand)
+		if !incrementPC {
 			continue
 		}
 		_, err := binFile.WriteString(fmt.Sprintf("%016b\n", b))
