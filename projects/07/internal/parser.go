@@ -3,6 +3,7 @@ package internal
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -25,6 +26,26 @@ func NewParser(filepath string) (Parser, error) {
 		file:    f,
 		scanner: s,
 	}, nil
+}
+
+func (p Parser) Parse(outputFilename string) error {
+	codeWriter, err := NewCodeWriter(outputFilename)
+	if err != nil {
+		return fmt.Errorf("failed to get NewCodeWriter: %w", err)
+	}
+	for p.advance() {
+		log.Printf("currentCommand: %s\n", p.currentCommand)
+		switch commandType(p.currentCommand) {
+		case C_ARITHMETIC:
+			codeWriter.writeArithmetic(p.currentCommand)
+		case C_PUSH, C_POP:
+			codeWriter.writePushPop(commandType(p.currentCommand), arg1(p.currentCommand), arg2(p.currentCommand))
+		default:
+			// TODO: implement
+			panic("not implemented !")
+		}
+	}
+	return nil
 }
 
 func (p *Parser) advance() bool {
@@ -73,7 +94,6 @@ func isCommand(text string) bool {
 
 func isEmptyLine(text string) bool {
 	whitespaceRemoved := removeWhiteSpace(text)
-	fmt.Printf("whitespaceRemoved: %s(%d)\n", whitespaceRemoved, len(whitespaceRemoved))
 	return len(whitespaceRemoved) == 0
 }
 
