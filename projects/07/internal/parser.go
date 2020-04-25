@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -38,6 +39,26 @@ func (p *Parser) advance() bool {
 		p.currentCommand = text
 		return true
 	}
+}
+
+func arg1(cmd string) string {
+	operands := strings.Split(cmd, " ")
+	// XXX: if len(operands) < 0 => panic
+	// NOTE: if cmd == "add" or "sub" etc. => return "add" or "sub"
+	if len(operands) == 1 {
+		return operands[0]
+	}
+	return operands[1]
+}
+
+// call this function commandType is in (C_PUSH, C_POP, C_FUNCTION, C_CALL)
+func arg2(cmd string) uint16 {
+	arg2, err := strconv.ParseInt(strings.Split(cmd, " ")[2], 10, 16)
+	if err != nil {
+		// TODO: error handling
+		panic("unknown arg2 characters")
+	}
+	return uint16(arg2)
 }
 
 func isCommand(text string) bool {
