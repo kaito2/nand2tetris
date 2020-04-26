@@ -27,7 +27,7 @@ func commandType(cmd string) CommandType {
 		return C_PUSH
 	}
 	if strings.HasPrefix(cmd, "pop") {
-		return C_PUSH
+		return C_POP
 	}
 	// TODO: implement
 	panic("not implemented")
@@ -106,4 +106,17 @@ func getOperator(cmd string) string {
 	symbol := strings.Split(cmd, " ")[0]
 	operator, _ := symbolOperatorMap[symbol]
 	return operator
+}
+
+var segmentSymbolMap = map[string]string{
+	"local":    "LCL",
+	"argument": "ARG",
+	"this":     "THIS",
+	"that":     "THAT",
+	"temp":     "5",
+	"pointer":  "3",
+}
+
+func getSegmentSymbol(segment string) string {
+	return segmentSymbolMap[segment]
 }

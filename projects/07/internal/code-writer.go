@@ -137,22 +137,67 @@ func (c *CodeWriter) writePushPop(cmdType CommandType, segment string, index uin
 		// XXX: support only constant segment
 		// TODO: define segment enum
 		if segment == "constant" {
-			// TODO: avoid hard coding...
 			// TODO: error handling
 			c.outputFile.WriteString(fmt.Sprintf("@%d\n", index))
 			c.outputFile.WriteString("D=A\n")
-			c.outputFile.WriteString("@SP\n")
-			c.outputFile.WriteString("A=M\n")
-			c.outputFile.WriteString("M=D\n")
 
-			c.outputFile.WriteString("@SP\n")
-			c.outputFile.WriteString("M=M+1\n")
+		} else if segment == "static" {
+			c.outputFile.WriteString(fmt.Sprintf("@%s.%d\n", c.currentVMFilename, index))
+			c.outputFile.WriteString("D=M\n")
+		} else if segment == "temp" || segment == "pointer" {
+			// TODO: implement
+			c.outputFile.WriteString(fmt.Sprintf("@%s\n", getSegmentSymbol(segment)))
+			// temp なら RAM[5 + index], pointer なら RAM[3 + index] になる必要があるので、
+			// D=M ではなく D=A とする。
+			c.outputFile.WriteString("D=A\n")
+			c.outputFile.WriteString(fmt.Sprintf("@%d\n", index))
+			c.outputFile.WriteString("A=D+A\n")
+			c.outputFile.WriteString("D=M\n")
 		} else {
 			// TODO: implement
-			panic("not implemented !")
+			c.outputFile.WriteString(fmt.Sprintf("@%s\n", getSegmentSymbol(segment)))
+			c.outputFile.WriteString("D=M\n")
+			c.outputFile.WriteString(fmt.Sprintf("@%d\n", index))
+			c.outputFile.WriteString("A=D+A\n")
+			c.outputFile.WriteString("D=M\n")
 		}
+		c.outputFile.WriteString("@SP\n")
+		c.outputFile.WriteString("A=M\n")
+		c.outputFile.WriteString("M=D\n")
+
+		c.outputFile.WriteString("@SP\n")
+		c.outputFile.WriteString("M=M+1\n")
 	} else { // C_POP
-		// TODO: implement
-		panic("not implemented !")
+		// TODO: validation (e.g. if segment == 'constant' then cause error)
+
+		if segment == "temp" || segment == "pointer" {
+			c.outputFile.WriteString(fmt.Sprintf("@%s\n", getSegmentSymbol(segment)))
+			c.outputFile.WriteString("D=A\n")
+			c.outputFile.WriteString(fmt.Sprintf("@%d\n", index))
+			c.outputFile.WriteString("D=D+A\n")
+		} else if segment == "static" {
+			c.outputFile.WriteString(fmt.Sprintf("@%s.%d\n", c.currentVMFilename, index))
+			c.outputFile.WriteString("D=A\n")
+		} else {
+			c.outputFile.WriteString(fmt.Sprintf("@%s\n", getSegmentSymbol(segment)))
+			c.outputFile.WriteString("D=M\n")
+			c.outputFile.WriteString(fmt.Sprintf("@%d\n", index))
+			c.outputFile.WriteString("D=D+A\n")
+		}
+		// dest{c.writeNum} に対象アドレスを格納
+		// OPTIMIZE: RAM 使うのはズル??
+		c.outputFile.WriteString(fmt.Sprintf("@dest%d\n", c.writeNum))
+		c.outputFile.WriteString("M=D\n")
+
+		// pop
+		c.outputFile.WriteString("@SP\n")
+		c.outputFile.WriteString("M=M-1\n")
+		c.outputFile.WriteString("A=M\n")
+		c.outputFile.WriteString("D=M\n")
+
+		// RAM[dest{c.writeNum}] に値を格納
+		c.outputFile.WriteString(fmt.Sprintf("@dest%d\n", c.writeNum))
+		c.outputFile.WriteString("A=M\n")
+		c.outputFile.WriteString("M=D\n")
 	}
 }

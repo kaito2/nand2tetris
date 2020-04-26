@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 )
 
 type Parser struct {
+	filename       string
 	file           *os.File
 	scanner        *bufio.Scanner
 	currentCommand string
@@ -21,9 +23,16 @@ func NewParser(filepath string) (Parser, error) {
 	}
 	s := bufio.NewScanner(f)
 	return Parser{
-		file:    f,
-		scanner: s,
+		filename: filepath,
+		file:     f,
+		scanner:  s,
 	}, nil
+}
+
+// e.g. sample-data/MemoryAccess/StaticTest1/StaticTest.vm
+//      => "StaticTest"
+func (p Parser) getFileBaseName() string {
+	return strings.Split(path.Base(p.filename), ".")[0]
 }
 
 func (p Parser) Parse(outputFilename string) error {
@@ -31,6 +40,7 @@ func (p Parser) Parse(outputFilename string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get NewCodeWriter: %w", err)
 	}
+	codeWriter.setFilename(p.getFileBaseName())
 	for p.advance() {
 		switch commandType(p.currentCommand) {
 		case C_ARITHMETIC:
