@@ -10,9 +10,8 @@ import (
 )
 
 type Parser struct {
-	file    *os.File
-	scanner *bufio.Scanner
-
+	file           *os.File
+	scanner        *bufio.Scanner
 	currentCommand string
 }
 
