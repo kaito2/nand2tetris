@@ -47,6 +47,16 @@ func (p Parser) Parse(outputFilename string) error {
 			codeWriter.writeArithmetic(p.currentCommand)
 		case C_PUSH, C_POP:
 			codeWriter.writePushPop(commandType(p.currentCommand), arg1(p.currentCommand), arg2(p.currentCommand))
+		case C_LABEL:
+			codeWriter.writeLabel(arg1(p.currentCommand))
+		case C_GOTO:
+			codeWriter.writeGoto(arg1(p.currentCommand))
+		case C_IF:
+			codeWriter.writeIf(arg1(p.currentCommand))
+		case C_FUNCTION:
+			codeWriter.writeFunction(arg1(p.currentCommand), arg2(p.currentCommand))
+		case C_CALL:
+			codeWriter.writeCall(arg1(p.currentCommand), arg2(p.currentCommand))
 		default:
 			// TODO: implement
 			panic("not implemented !")

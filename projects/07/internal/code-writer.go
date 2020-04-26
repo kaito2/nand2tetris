@@ -201,3 +201,37 @@ func (c *CodeWriter) writePushPop(cmdType CommandType, segment string, index uin
 		c.outputFile.WriteString("M=D\n")
 	}
 }
+
+func (c *CodeWriter) writeInit() {
+	// TODO: implement
+	panic("not implemented !")
+}
+
+func (c *CodeWriter) writeLabel(label string) {
+	// TODO: implement
+	panic("not implemented !")
+}
+
+func (c *CodeWriter) writeGoto(label string) {
+	// TODO: implement
+	panic("not implemented !")
+}
+
+func (c *CodeWriter) writeIf(label string) {
+	// TODO: implement
+	panic("not implemented !")
+}
+
+func (c *CodeWriter) writeCall(functionName string, numArgs uint16) {
+	// TODO: implement
+	panic("not implemented !")
+}
+
+func (c *CodeWriter) writeReturn() {
+	// TODO: implement
+	panic("not implemented !")
+}
+
+func (c *CodeWriter) writeFunction(functionName string, numLocals uint16) {
+	panic("not implemented !")
+}
