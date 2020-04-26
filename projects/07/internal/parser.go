@@ -3,7 +3,6 @@ package internal
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -33,7 +32,6 @@ func (p Parser) Parse(outputFilename string) error {
 		return fmt.Errorf("failed to get NewCodeWriter: %w", err)
 	}
 	for p.advance() {
-		log.Printf("currentCommand: %s\n", p.currentCommand)
 		switch commandType(p.currentCommand) {
 		case C_ARITHMETIC:
 			codeWriter.writeArithmetic(p.currentCommand)

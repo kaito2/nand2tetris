@@ -30,7 +30,6 @@ func (c *CodeWriter) setFilename(filename string) {
 
 func (c *CodeWriter) incWriteNum() {
 	c.writeNum++
-	fmt.Println("writeNum: ", c.writeNum)
 }
 
 func (c *CodeWriter) writeArithmetic(cmd string) {
