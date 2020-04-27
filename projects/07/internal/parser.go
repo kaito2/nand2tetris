@@ -46,7 +46,11 @@ func (p Parser) Parse(outputFilename string) error {
 		case C_ARITHMETIC:
 			codeWriter.writeArithmetic(p.currentCommand)
 		case C_PUSH, C_POP:
-			codeWriter.writePushPop(commandType(p.currentCommand), arg1(p.currentCommand), arg2(p.currentCommand))
+			arg2Num, err := arg2(p.currentCommand)
+			if err != nil {
+				return fmt.Errorf("failed to get arg2: %w", err)
+			}
+			codeWriter.writePushPop(commandType(p.currentCommand), arg1(p.currentCommand), arg2Num)
 		case C_LABEL:
 			codeWriter.writeLabel(arg1(p.currentCommand))
 		case C_GOTO:
@@ -54,9 +58,19 @@ func (p Parser) Parse(outputFilename string) error {
 		case C_IF:
 			codeWriter.writeIf(arg1(p.currentCommand))
 		case C_FUNCTION:
-			codeWriter.writeFunction(arg1(p.currentCommand), arg2(p.currentCommand))
+			arg2Num, err := arg2(p.currentCommand)
+			if err != nil {
+				return fmt.Errorf("failed to get arg2: %w", err)
+			}
+			codeWriter.writeFunction(arg1(p.currentCommand), arg2Num)
 		case C_CALL:
-			codeWriter.writeCall(arg1(p.currentCommand), arg2(p.currentCommand))
+			arg2Num, err := arg2(p.currentCommand)
+			if err != nil {
+				return fmt.Errorf("failed to get arg2: %w", err)
+			}
+			codeWriter.writeCall(arg1(p.currentCommand), arg2Num)
+		case C_RETURN:
+			codeWriter.writeReturn()
 		default:
 			// TODO: implement
 			panic("not implemented !")
@@ -70,7 +84,7 @@ func (p *Parser) advance() bool {
 		if !p.scanner.Scan() {
 			return false
 		}
-		text := p.scanner.Text()
+		text := removeComment(p.scanner.Text())
 		if !isCommand(text) {
 			continue
 		}
@@ -90,13 +104,13 @@ func arg1(cmd string) string {
 }
 
 // call this function commandType is in (C_PUSH, C_POP, C_FUNCTION, C_CALL)
-func arg2(cmd string) uint16 {
-	arg2, err := strconv.ParseInt(strings.Split(cmd, " ")[2], 10, 16)
+func arg2(cmd string) (uint16, error) {
+	arg2String := strings.Split(cmd, " ")[2]
+	arg2, err := strconv.ParseInt(removeWhiteSpace(arg2String), 10, 16)
 	if err != nil {
-		// TODO: error handling
-		panic("unknown arg2 characters")
+		return 0, fmt.Errorf("unknown arg2 characters in cmd: %s", cmd)
 	}
-	return uint16(arg2)
+	return uint16(arg2), nil
 }
 
 func isCommand(text string) bool {
@@ -120,7 +134,12 @@ func isComment(text string) bool {
 }
 
 func removeWhiteSpace(text string) string {
-	return strings.ReplaceAll(text, " ", "")
+	halfspaceRemovedText := strings.ReplaceAll(text, " ", "")
+	return strings.ReplaceAll(halfspaceRemovedText, "\t", "")
+}
+
+func removeComment(text string) string {
+	return strings.Split(text, "//")[0]
 }
 
 func (p *Parser) close() {

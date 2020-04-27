@@ -29,6 +29,24 @@ func commandType(cmd string) CommandType {
 	if strings.HasPrefix(cmd, "pop") {
 		return C_POP
 	}
+	if strings.HasPrefix(cmd, "label") {
+		return C_LABEL
+	}
+	if strings.HasPrefix(cmd, "if-goto") {
+		return C_IF
+	}
+	if strings.HasPrefix(cmd, "goto") {
+		return C_GOTO
+	}
+	if strings.HasPrefix(cmd, "function") {
+		return C_FUNCTION
+	}
+	if strings.HasPrefix(cmd, "return") {
+		return C_RETURN
+	}
+	if strings.HasPrefix(cmd, "call") {
+		return C_CALL
+	}
 	// TODO: implement
 	panic("not implemented")
 }

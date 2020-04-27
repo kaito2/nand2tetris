@@ -208,30 +208,118 @@ func (c *CodeWriter) writeInit() {
 }
 
 func (c *CodeWriter) writeLabel(label string) {
-	// TODO: implement
-	panic("not implemented !")
+	c.outputFile.WriteString(fmt.Sprintf("(%s.%s)\n", c.currentVMFilename, label))
 }
 
 func (c *CodeWriter) writeGoto(label string) {
-	// TODO: implement
-	panic("not implemented !")
+	c.outputFile.WriteString(fmt.Sprintf("@%s.%s\n", c.currentVMFilename, label))
+	c.outputFile.WriteString("0;JMP\n")
 }
 
 func (c *CodeWriter) writeIf(label string) {
-	// TODO: implement
-	panic("not implemented !")
+	c.outputFile.WriteString("@SP\n")
+	c.outputFile.WriteString("M=M-1\n")
+	c.outputFile.WriteString("A=M\n")
+	c.outputFile.WriteString("D=M\n")
+
+	c.outputFile.WriteString(fmt.Sprintf("@%s.%s\n", c.currentVMFilename, label))
+	c.outputFile.WriteString("D;JNE\n")
 }
 
 func (c *CodeWriter) writeCall(functionName string, numArgs uint16) {
-	// TODO: implement
-	panic("not implemented !")
+	// TODO: segment の代わりに label を使っても機能するか確認
+	returnAddressSymbol := fmt.Sprintf("@%s.return-address%d\n", c.currentVMFilename, c.writeNum)
+	// push return-address
+	c.writePushPop(C_PUSH, returnAddressSymbol, 0)
+	// push LCL
+	c.writePushPop(C_PUSH, "local", 0)
+	// push ARG
+	c.writePushPop(C_PUSH, "argument", 0)
+	// push THIS
+	c.writePushPop(C_PUSH, "this", 0)
+	// push THAT
+	c.writePushPop(C_PUSH, "that", 0)
+
+	// ARG = SP - n - 5
+	c.outputFile.WriteString("@SP\n")
+	c.outputFile.WriteString("D=M\n")
+	for i := uint16(0); i < (numArgs + 5); i++ {
+		c.outputFile.WriteString("D=D-1\n")
+	}
+	c.outputFile.WriteString("@ARG\n")
+	c.outputFile.WriteString("M=D\n")
+
+	// LCL = SP
+	c.outputFile.WriteString("@SP\n")
+	c.outputFile.WriteString("D=M\n")
+	c.outputFile.WriteString("@LCL\n")
+	c.outputFile.WriteString("M=D\n")
+
+	// goto f
+	c.outputFile.WriteString(fmt.Sprintf("@%s.%s\n", c.currentVMFilename, functionName))
+	c.outputFile.WriteString("0;JMP\n")
+	c.outputFile.WriteString(fmt.Sprintf("(%s)\n", returnAddressSymbol))
 }
 
 func (c *CodeWriter) writeReturn() {
-	// TODO: implement
-	panic("not implemented !")
+	// FRAME = LCL
+	c.outputFile.WriteString("@LCL\n")
+	c.outputFile.WriteString("D=M\n")
+	c.outputFile.WriteString("@FRAME\n")
+	c.outputFile.WriteString("M=D\n")
+
+	// RET = *(FRAME - 5)
+	c.writeLoad("RET", "FRAME", 5)
+
+	// *ARG = pop()
+	c.outputFile.WriteString("@SP\n")
+	c.outputFile.WriteString("M=M-1\n")
+	c.outputFile.WriteString("A=M\n")
+	c.outputFile.WriteString("D=M\n")
+
+	c.outputFile.WriteString("@ARG\n")
+	c.outputFile.WriteString("M=D\n")
+
+	// SP = ARG + 1
+	c.outputFile.WriteString("@ARG\n")
+	c.outputFile.WriteString("D=M+1\n")
+	c.outputFile.WriteString("@SP\n")
+	c.outputFile.WriteString("M=D\n")
+
+	// THAT = *(FRAME - 1)
+	c.writeLoad("THAT", "FRAME", 1)
+	// THIS = *(FRAME - 2)
+	c.writeLoad("THIS", "FRAME", 2)
+	// ARG  = *(FRAME - 3)
+	c.writeLoad("ARG", "FRAME", 3)
+	// LCL  = *(FRAME - 4)
+	c.writeLoad("LCL", "FRAME", 4)
+
+	// goto RET
+	c.outputFile.WriteString("@RET\n")
+	c.outputFile.WriteString("0;JMP\n")
+}
+
+// write assembly (pesudo: '[SYMBOL] = *(SEGMENT - n)')
+// e.g. 'RET = *(FRAME - 5)'
+func (c *CodeWriter) writeLoad(symbol, segment string, index uint16) {
+	c.outputFile.WriteString(fmt.Sprintf("@%s\n", segment))
+	c.outputFile.WriteString("D=M\n")
+
+	//XXX: index を プラスしたい場合には対応できていない
+	for i := uint16(0); i < index; i++ {
+		c.outputFile.WriteString("D=D-1\n")
+	}
+	c.outputFile.WriteString("A=D\n")
+	c.outputFile.WriteString("D=M\n")
+	c.outputFile.WriteString(fmt.Sprintf("@%s\n", symbol))
+	c.outputFile.WriteString("M=D\n")
 }
 
 func (c *CodeWriter) writeFunction(functionName string, numLocals uint16) {
-	panic("not implemented !")
+	c.outputFile.WriteString(fmt.Sprintf("(%s.%s)\n", c.currentVMFilename, functionName))
+	// ローカル変数の領域を確保
+	for i := uint16(0); i < numLocals; i++ {
+		c.writePushPop(C_PUSH, "constant", 0)
+	}
 }
