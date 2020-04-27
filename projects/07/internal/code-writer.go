@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -13,7 +14,8 @@ type CodeWriter struct {
 }
 
 func NewCodeWriter(outputFilename string) (CodeWriter, error) {
-	f, err := os.Create(outputFilename)
+	// NOTE: outputFile should be exists
+	f, err := os.OpenFile(outputFilename, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
 		return CodeWriter{}, fmt.Errorf("failed to os.Open: %w", err)
 	}
@@ -55,7 +57,10 @@ func (c CodeWriter) writeBinaryFunction(cmd string) {
 
 func (c CodeWriter) writeCompAndJumpFunction(cmd string) {
 	// TODO: error handling
-	c.outputFile.WriteString("@SP\n")
+	_, err := c.outputFile.WriteString("@SP\n")
+	if err != nil {
+		log.Fatalf("Fatal: %v\n", err)
+	}
 	c.outputFile.WriteString("M=M-1\n")
 	c.outputFile.WriteString("A=M\n")
 	c.outputFile.WriteString("D=M\n")
@@ -153,12 +158,19 @@ func (c *CodeWriter) writePushPop(cmdType CommandType, segment string, index uin
 			c.outputFile.WriteString(fmt.Sprintf("@%d\n", index))
 			c.outputFile.WriteString("A=D+A\n")
 			c.outputFile.WriteString("D=M\n")
-		} else {
+		} else if segment == "argument" || segment == "local" || segment == "this" || segment == "that" {
 			// TODO: implement
+			// index 分だけ A=A+1 し続ける作戦にする?
 			c.outputFile.WriteString(fmt.Sprintf("@%s\n", getSegmentSymbol(segment)))
 			c.outputFile.WriteString("D=M\n")
 			c.outputFile.WriteString(fmt.Sprintf("@%d\n", index))
 			c.outputFile.WriteString("A=D+A\n")
+			c.outputFile.WriteString("D=M\n")
+		} else {
+			if index != 0 {
+				panic("Symbol and index cannot be used at the same time.")
+			}
+			c.outputFile.WriteString(fmt.Sprintf("@%s.%s\n", c.currentVMFilename, segment))
 			c.outputFile.WriteString("D=M\n")
 		}
 		c.outputFile.WriteString("@SP\n")
@@ -228,7 +240,7 @@ func (c *CodeWriter) writeIf(label string) {
 
 func (c *CodeWriter) writeCall(functionName string, numArgs uint16) {
 	// TODO: segment の代わりに label を使っても機能するか確認
-	returnAddressSymbol := fmt.Sprintf("@%s.return-address%d\n", c.currentVMFilename, c.writeNum)
+	returnAddressSymbol := fmt.Sprintf("%s.return-address%d", c.currentVMFilename, c.writeNum)
 	// push return-address
 	c.writePushPop(C_PUSH, returnAddressSymbol, 0)
 	// push LCL

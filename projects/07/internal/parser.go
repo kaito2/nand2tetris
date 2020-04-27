@@ -3,6 +3,7 @@ package internal
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"strconv"
@@ -36,12 +37,14 @@ func (p Parser) getFileBaseName() string {
 }
 
 func (p Parser) Parse(outputFilename string) error {
+	log.Println("Parse: ", p.filename)
 	codeWriter, err := NewCodeWriter(outputFilename)
 	if err != nil {
 		return fmt.Errorf("failed to get NewCodeWriter: %w", err)
 	}
 	codeWriter.setFilename(p.getFileBaseName())
 	for p.advance() {
+		log.Println(p.currentCommand)
 		switch commandType(p.currentCommand) {
 		case C_ARITHMETIC:
 			codeWriter.writeArithmetic(p.currentCommand)

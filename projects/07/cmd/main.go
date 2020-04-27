@@ -7,15 +7,15 @@ import (
 )
 
 func main() {
-	inputFilename := "sample-data/FunctionCalls/SimpleFunction/SimpleFunction.vm"
-	parser, err := internal.NewParser(inputFilename)
+	inputPath := "sample-data/FunctionCalls/FibonacciElement"
+	aggregator, err := internal.NewAggregator(inputPath)
 	if err != nil {
 		log.Fatalf("Failed to get NewParser: %v", err)
 	}
 
-	outputFilename := "sample-data/FunctionCalls/SimpleFunction/SimpleFunction.asm"
-	err = parser.Parse(outputFilename)
+	outputFilePath := "sample-data/FunctionCalls/FibonacciElement/out.asm"
+	err = aggregator.ParseAll(outputFilePath)
 	if err != nil {
-		log.Fatalf("Failed to Parse: %v", err)
+		log.Fatalf("Failed to ParseALL: %v", err)
 	}
 }
