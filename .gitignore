@@ -1,3 +1,6 @@
+# 07
+projects/07/sample-data/**/**/*.asm
+
 # Simulators
 *.dat
 
