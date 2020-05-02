@@ -1,5 +1,7 @@
 package internal
 
+import "github.com/kaito2/nand2tetris/internal/types"
+
 type Tokenizer struct{}
 
 func NewTokenizer() Tokenizer {
@@ -10,26 +12,22 @@ func (t *Tokenizer) advance() bool {
 	panic("not implemented")
 }
 
-func (t Tokenizer)tokenType() TokenType{
-	panic("not implemented")
+func keyword(token string) types.Keyword {
+	return types.GetKeyword(token)
 }
 
-func (t Tokenizer)keyword() KeywordType{
-	panic("not implemented")
+func symbol(token string) string {
+	return token
 }
 
-func (t Tokenizer) symbol() string {
-	panic("not implemented")
+func identifier(token string) string {
+	return token
 }
 
-func (t Tokenizer) identifier() string {
-	panic("not implemented")
+func intVal(token string) int32 {
+	return types.GetIntegerConstant(token)
 }
 
-func (t Tokenizer) intVal() int {
-	panic("not implemented")
-}
-
-func (t Tokenizer) stringVal() string {
+func stringVal() string {
 	panic("not implemented")
 }
