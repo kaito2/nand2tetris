@@ -14,7 +14,7 @@ func CheckTokenType(token string) TokenType {
 	if isKeyword(token) {
 		return KEYWORD
 	}
-	if isSymbol(token) {
+	if IsSymbol(token) {
 		return SYMBOL
 	}
 	if IsIntegerConstant(token) {

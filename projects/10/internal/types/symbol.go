@@ -6,7 +6,7 @@ var allSymbols = []Symbol{
 	"{", "}", "(", ")", "[", "]", ".", ",", ";", "+", "-", "*", "/", "&", "|", "<", ">", "=", "~",
 }
 
-func isSymbol(s string) bool {
+func IsSymbol(s string) bool {
 	for _, symbol := range allSymbols {
 		if Symbol(s) == symbol {
 			return true
