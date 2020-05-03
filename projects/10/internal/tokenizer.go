@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/kaito2/nand2tetris/internal/types"
 )
@@ -12,8 +13,9 @@ import (
 type Tokenizer struct {
 	inputFilename string
 	inputFile     *os.File
-	reader        *bufio.Reader
+	scanner       *bufio.Scanner
 	currentToken  string
+	lineTokens    []string
 }
 
 func NewTokenizer(inputFilename string) (Tokenizer, error) {
@@ -21,60 +23,71 @@ func NewTokenizer(inputFilename string) (Tokenizer, error) {
 	if err != nil {
 		return Tokenizer{}, fmt.Errorf("failed to os.Open: %w", err)
 	}
-	reader := bufio.NewReader(file)
+	scanner := bufio.NewScanner(file)
 	return Tokenizer{
 		inputFilename: inputFilename,
 		inputFile:     file,
-		reader:        reader,
+		scanner:       scanner,
 	}, nil
 }
 
 func (t *Tokenizer) advance() bool {
-	// 初期化
 	for {
-		r, _, err := t.reader.ReadRune()
-		if err != nil {
-			// return false only when err is EOF
-			return false
-		}
-		nextString := string(r)
-		if nextString == " " {
-			continue
-		}
-		if nextString == "\n" {
-			continue
-		}
-		t.currentToken = nextString
-		break
-	}
-
-	if types.IsSymbol(t.currentToken) {
-		return true
-	}
-
-	for {
-		nextRune, _, err := t.reader.ReadRune()
-		if err != nil {
-			// return false only when err is EOF
-			return false
-		}
-		nextString := string(nextRune)
-		if nextString == "\n" {
-			continue
-		}
-		if nextString == " " {
+		// 行のトークンが残っている場合
+		if len(t.lineTokens) != 0 {
+			// var next string
+			next, left := t.lineTokens[0], t.lineTokens[1:]
+			t.lineTokens = left
+			t.currentToken = next
 			return true
+		}
+
+		// 行のトークンがない場合は次の行を読みに行く
+		if !t.scanner.Scan() {
+			return false
+		}
+		line := t.scanner.Text()
+		t.lineTokens = tokenizeLine(line)
+	}
+}
+
+func tokenizeLine(line string) (tokens []string) {
+	log.Println("line: ", line)
+	// skip empty line
+	if len(line) == 0 {
+		return nil
+	}
+
+	lineWithoutComment := removeComment(line)
+
+	tmpToken := ""
+	for _, c := range lineWithoutComment {
+		nextString := string(c)
+		if nextString == "\n" {
+			continue
+		}
+		if nextString == " " {
+			if len(tmpToken) != 0 {
+				tokens = append(tokens, tmpToken)
+				tmpToken = ""
+			}
+			continue
 		}
 		if types.IsSymbol(nextString) {
-			err := t.reader.UnreadRune()
-			if err != nil {
-				// TODO: error handling
-				log.Fatalf("failed: %s", nextString)
+			if len(tmpToken) != 0 {
+				tokens = append(tokens, tmpToken)
+				tmpToken = ""
 			}
-			return true
+			tokens = append(tokens, nextString)
+			continue
 		}
-		t.currentToken = t.currentToken + nextString
+		tmpToken = tmpToken + nextString
 	}
+	return tokens
+}
+
+func removeComment(line string) string {
+	return strings.Split(line, "//")[0]
 }
 
 func keyword(token string) types.Keyword {
