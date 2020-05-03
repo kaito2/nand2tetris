@@ -3,7 +3,6 @@ package internal
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -31,6 +30,24 @@ func NewTokenizer(inputFilename string) (Tokenizer, error) {
 	}, nil
 }
 
+func (t *Tokenizer) GenerateTokenFile(outputFilename string) error {
+	outputFile, err := os.Create(outputFilename)
+	if err != nil {
+		return fmt.Errorf("failed to os.Create: %w", err)
+	}
+	defer outputFile.Close()
+
+	outputFile.WriteString("<tokens>\n")
+	defer outputFile.WriteString("</tokens>\n")
+
+	for t.advance() {
+		token := t.currentToken
+		tokenType := types.CheckTokenType(token)
+		outputFile.WriteString(fmt.Sprintf("<%s> %s </%s>\n", tokenType, token, tokenType))
+	}
+	return nil
+}
+
 func (t *Tokenizer) advance() bool {
 	for {
 		// 行のトークンが残っている場合
@@ -52,7 +69,6 @@ func (t *Tokenizer) advance() bool {
 }
 
 func tokenizeLine(line string) (tokens []string) {
-	log.Println("line: ", line)
 	// skip empty line
 	if len(line) == 0 {
 		return nil
@@ -67,11 +83,16 @@ func tokenizeLine(line string) (tokens []string) {
 			continue
 		}
 		if nextString == " " {
-			if len(tmpToken) != 0 {
+			if len(tmpToken) == 0 {
+				continue
+			}
+
+			// NOTE: string token の場合はスペースも追加する必要がある
+			if tmpToken[0] != '"' {
 				tokens = append(tokens, tmpToken)
 				tmpToken = ""
+				continue
 			}
-			continue
 		}
 		if types.IsSymbol(nextString) {
 			if len(tmpToken) != 0 {

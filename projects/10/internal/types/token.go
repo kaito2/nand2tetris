@@ -1,16 +1,18 @@
 package types
 
-type TokenType int
+import "log"
+
+type Token string
 
 const (
-	KEYWORD TokenType = iota
-	SYMBOL
-	IDENTIFIER
-	INT_CONST
-	STRING_CONST
+	KEYWORD      Token = "keyword"
+	SYMBOL       Token = "symbol"
+	IDENTIFIER   Token = "identifier"
+	INT_CONST    Token = "integerConstant"
+	STRING_CONST Token = "stringConstant"
 )
 
-func CheckTokenType(token string) TokenType {
+func CheckTokenType(token string) Token {
 	if isKeyword(token) {
 		return KEYWORD
 	}
@@ -26,5 +28,6 @@ func CheckTokenType(token string) TokenType {
 	if isString(token) {
 		return STRING_CONST
 	}
-	panic("this token not supported")
+	log.Fatalf("this token not supported: %s", token)
+	return ""
 }
