@@ -63,8 +63,23 @@ func (t *Tokenizer) advance() bool {
 		if !t.scanner.Scan() {
 			return false
 		}
-		line := t.scanner.Text()
-		t.lineTokens = tokenizeLine(line)
+		// TODO: レイヤーがおかしいので Tokenizer に含める方法を考える（普通に汚い）
+		if strings.Contains(t.scanner.Text(), "/*") {
+			for {
+				if strings.Contains(t.scanner.Text(), "*/") {
+					// 行のトークンがない場合は次の行を読みに行く
+					if !t.scanner.Scan() {
+						return false
+					}
+					break
+				}
+				// 行のトークンがない場合は次の行を読みに行く
+				if !t.scanner.Scan() {
+					return false
+				}
+			}
+		}
+		t.lineTokens = tokenizeLine(t.scanner.Text())
 	}
 }
 
