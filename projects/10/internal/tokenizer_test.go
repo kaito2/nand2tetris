@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"strings"
 	"testing"
 
@@ -44,10 +45,21 @@ func TestNew_advance(t *testing.T) {
 }
 
 func TestTokenizer_GenerateTokenFile(t *testing.T) {
-	inputFilename := "../sample/Square/Main.jack"
-	outputFilename := "testoutput/output.xml"
-	wantFilename := "../sample/Square/MainT.xml"
+	// TODO: ファイル命名規則をメモ
+	inputFilenames := []string{
+		"../sample/Square/Main.jack",
+	}
 
+	for _, inputFilename := range inputFilenames {
+		outputBase := strings.ReplaceAll(path.Base(inputFilename), ".jack", "T.xml")
+		outputFilename := "testoutput/" + outputBase
+		wantFilename := path.Dir(inputFilename) + "/" + outputBase
+
+		testTokenizer_GenerateTokenFile(t, inputFilename, outputFilename, wantFilename)
+	}
+}
+
+func testTokenizer_GenerateTokenFile(t *testing.T, inputFilename, outputFilename, wantFilename string) {
 	tokenizer, err := NewTokenizer(inputFilename)
 	assert.NoError(t, err)
 	err = tokenizer.GenerateTokenFile(outputFilename)
