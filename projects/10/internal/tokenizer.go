@@ -43,9 +43,24 @@ func (t *Tokenizer) GenerateTokenFile(outputFilename string) error {
 	for t.advance() {
 		token := t.currentToken
 		tokenType := types.CheckTokenType(token)
-		outputFile.WriteString(fmt.Sprintf("<%s> %s </%s>\n", tokenType, token, tokenType))
+		outputFile.WriteString(fmt.Sprintf("<%s> %s </%s>\n", tokenType, procToken(token), tokenType))
 	}
 	return nil
+}
+
+func procToken(token string) string {
+	switch types.CheckTokenType(token) {
+	case types.KEYWORD:
+		return string(types.GetKeyword(token))
+	case types.SYMBOL:
+		return token
+	case types.INT_CONST:
+		return token
+	case types.STRING_CONST:
+		return types.GetString(token)
+	default: // types.IDENTIFIER
+		return token
+	}
 }
 
 func (t *Tokenizer) advance() bool {
