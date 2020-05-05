@@ -1,4 +1,4 @@
-package internal
+package tokenizer
 
 import (
 	"bufio"
@@ -9,28 +9,40 @@ import (
 	"github.com/kaito2/nand2tetris/internal/types"
 )
 
-type Tokenizer struct {
+type Tokenizer interface {
+	CurrentToken() Token
+	Advance() bool
+
+	// TODO: remove?
+	GenerateTokenFile(outputFilename string) error
+}
+
+type TokenizerImpl struct {
 	inputFilename string
 	inputFile     *os.File
 	scanner       *bufio.Scanner
-	currentToken  string
-	lineTokens    []string
+	currentToken  Token
+	lineTokens    []Token
 }
 
 func NewTokenizer(inputFilename string) (Tokenizer, error) {
 	file, err := os.Open(inputFilename)
 	if err != nil {
-		return Tokenizer{}, fmt.Errorf("failed to os.Open: %w", err)
+		return &TokenizerImpl{}, fmt.Errorf("failed to os.Open: %w", err)
 	}
 	scanner := bufio.NewScanner(file)
-	return Tokenizer{
+	return &TokenizerImpl{
 		inputFilename: inputFilename,
 		inputFile:     file,
 		scanner:       scanner,
 	}, nil
 }
 
-func (t *Tokenizer) GenerateTokenFile(outputFilename string) error {
+func (t TokenizerImpl) CurrentToken() Token {
+	return t.currentToken
+}
+
+func (t *TokenizerImpl) GenerateTokenFile(outputFilename string) error {
 	outputFile, err := os.Create(outputFilename)
 	if err != nil {
 		return fmt.Errorf("failed to os.Create: %w", err)
@@ -40,30 +52,15 @@ func (t *Tokenizer) GenerateTokenFile(outputFilename string) error {
 	outputFile.WriteString("<tokens>\n")
 	defer outputFile.WriteString("</tokens>\n")
 
-	for t.advance() {
+	for t.Advance() {
 		token := t.currentToken
-		tokenType := types.CheckTokenType(token)
-		outputFile.WriteString(fmt.Sprintf("<%s> %s </%s>\n", tokenType, procToken(token), tokenType))
+		// tokenType := types.CheckTokenType(token.TypeString())
+		outputFile.WriteString(fmt.Sprintf("<%s> %s </%s>\n", token.Type, token.String, token.Type))
 	}
 	return nil
 }
 
-func procToken(token string) string {
-	switch types.CheckTokenType(token) {
-	case types.KEYWORD:
-		return string(types.GetKeyword(token))
-	case types.SYMBOL:
-		return token
-	case types.INT_CONST:
-		return token
-	case types.STRING_CONST:
-		return types.GetString(token)
-	default: // types.IDENTIFIER
-		return token
-	}
-}
-
-func (t *Tokenizer) advance() bool {
+func (t *TokenizerImpl) Advance() bool {
 	for {
 		// 行のトークンが残っている場合
 		if len(t.lineTokens) != 0 {
@@ -98,7 +95,7 @@ func (t *Tokenizer) advance() bool {
 	}
 }
 
-func tokenizeLine(line string) (tokens []string) {
+func tokenizeLine(line string) (tokens []Token) {
 	// skip empty line
 	if len(line) == 0 {
 		return nil
@@ -106,55 +103,39 @@ func tokenizeLine(line string) (tokens []string) {
 
 	lineWithoutComment := removeComment(line)
 
-	tmpToken := ""
+	tmpString := ""
 	for _, c := range lineWithoutComment {
 		nextString := string(c)
 		if nextString == "\n" {
 			continue
 		}
 		if nextString == " " {
-			if len(tmpToken) == 0 {
+			if len(tmpString) == 0 {
 				continue
 			}
 
 			// NOTE: string token の場合はスペースも追加する必要がある
-			if tmpToken[0] != '"' {
-				tokens = append(tokens, tmpToken)
-				tmpToken = ""
+			if tmpString[0] != '"' {
+				tokens = append(tokens, NewToken(tmpString))
+				tmpString = ""
 				continue
 			}
 		}
 		if types.IsSymbol(nextString) {
-			if len(tmpToken) != 0 {
-				tokens = append(tokens, tmpToken)
-				tmpToken = ""
+			if len(tmpString) != 0 {
+				tokens = append(tokens, NewToken(tmpString))
+				tmpString = ""
 			}
-			tokens = append(tokens, nextString)
+			tokens = append(tokens, NewToken(nextString))
 			continue
 		}
-		tmpToken = tmpToken + nextString
+		tmpString = tmpString + nextString
 	}
 	return tokens
 }
 
 func removeComment(line string) string {
 	return strings.Split(line, "//")[0]
-}
-
-func keyword(token string) types.Keyword {
-	return types.GetKeyword(token)
-}
-
-func symbol(token string) string {
-	return token
-}
-
-func identifier(token string) string {
-	return token
-}
-
-func intVal(token string) int32 {
-	return types.GetIntegerConstant(token)
 }
 
 func stringVal(token string) string {
