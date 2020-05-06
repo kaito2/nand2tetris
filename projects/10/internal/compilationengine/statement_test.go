@@ -47,7 +47,7 @@ func Test_compileReturn(t *testing.T) {
 	for _, c := range cases {
 		testTokenizer := NewTestTokenizer(c.tokens)
 		compilationEngine := NewCompilationEngine(&testTokenizer)
-		compilationEngineImpl := compilationEngine.(CompilationEngineImpl)
+		compilationEngineImpl := compilationEngine.(*CompilationEngineImpl)
 		gotXML := compilationEngineImpl.compileReturn()
 		assert.Equal(t, c.wantXML, gotXML)
 	}
@@ -111,7 +111,7 @@ func Test_compileDoStatement(t *testing.T) {
 	for _, c := range cases {
 		testTokenizer := NewTestTokenizer(c.tokens)
 		compilationEngine := NewCompilationEngine(&testTokenizer)
-		compilationEngineImpl := compilationEngine.(CompilationEngineImpl)
+		compilationEngineImpl := compilationEngine.(*CompilationEngineImpl)
 		gotXML := compilationEngineImpl.compileDoStatement()
 		assert.Equal(t, c.wantXML, gotXML)
 	}
@@ -182,7 +182,7 @@ func Test_compileWhileStatement(t *testing.T) {
 	for _, c := range cases {
 		testTokenizer := NewTestTokenizer(c.tokens)
 		compilationEngine := NewCompilationEngine(&testTokenizer)
-		compilationEngineImpl := compilationEngine.(CompilationEngineImpl)
+		compilationEngineImpl := compilationEngine.(*CompilationEngineImpl)
 		gotXML := compilationEngineImpl.compileWhileStatement()
 		assert.Equal(t, c.wantXML, gotXML)
 	}
@@ -445,7 +445,7 @@ func Test_compileStatements(t *testing.T) {
 	for _, c := range cases {
 		testTokenizer := NewTestTokenizer(c.tokens)
 		compilationEngine := NewCompilationEngine(&testTokenizer)
-		compilationEngineImpl := compilationEngine.(CompilationEngineImpl)
+		compilationEngineImpl := compilationEngine.(*CompilationEngineImpl)
 		gotXML := compilationEngineImpl.compileStatements()
 		assert.Equal(t, c.wantXML, gotXML)
 	}

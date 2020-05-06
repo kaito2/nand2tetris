@@ -1,12 +1,14 @@
 package compilationengine
 
 import (
+	"log"
+
 	"github.com/kaito2/nand2tetris/internal/tokenizer"
 )
 
 type CompilationEngine interface {
 	// TODO: add functions
-
+	Compile()
 }
 
 type CompilationEngineImpl struct {
@@ -16,9 +18,12 @@ type CompilationEngineImpl struct {
 }
 
 func NewCompilationEngine(tokenizer tokenizer.Tokenizer) CompilationEngine {
+	// TODO: tokenizer側で初期化時に currentToken をセットするように修正
+	tokenizer.Advance()
+
 	currentToken := tokenizer.CurrentToken()
 	hasNext := tokenizer.Advance()
-	return CompilationEngineImpl{
+	return &CompilationEngineImpl{
 		tokenizer: tokenizer,
 		current:   currentToken,
 		hasNext:   hasNext,
@@ -43,52 +48,7 @@ func (c CompilationEngineImpl) nextToken() tokenizer.Token {
 	return c.tokenizer.CurrentToken()
 }
 
-// TODO: implemented
-
-func compileClass() {
-
-}
-
-func compileClassVarDec() {
-
-}
-
-func compileSubroutine() {
-
-}
-
-func compileParameterList() {
-
-}
-
-func compileVarDec() {
-
-}
-
-func compileStatements() {
-
-}
-
-func compileDo() {
-
-}
-
-func compileLet() {
-
-}
-
-func compileWhile() {
-
-}
-
-func compileReturn() {
-
-}
-
-func compileIf() {
-
-}
-
-func compileExpression() {
-
+func (c *CompilationEngineImpl) Compile() {
+	xml := c.compileClass()
+	log.Println(xml)
 }

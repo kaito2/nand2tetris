@@ -31,7 +31,7 @@ func Test_compileTerm(t *testing.T) {
 
 	testTokenizer := NewTestTokenizer(tokens)
 	compilationEngine := NewCompilationEngine(&testTokenizer)
-	compilationEngineImpl := compilationEngine.(CompilationEngineImpl)
+	compilationEngineImpl := compilationEngine.(*CompilationEngineImpl)
 	gotXML := compilationEngineImpl.compileTerm()
 	// t.Log("want: \n", wantXML)
 	// t.Log("got: \n", gotXML)
@@ -72,7 +72,7 @@ func Test_compileExpression(t *testing.T) {
 
 	testTokenizer := NewTestTokenizer(tokens)
 	compilationEngine := NewCompilationEngine(&testTokenizer)
-	compilationEngineImpl := compilationEngine.(CompilationEngineImpl)
+	compilationEngineImpl := compilationEngine.(*CompilationEngineImpl)
 	gotXML := compilationEngineImpl.compileExpression()
 	// t.Log("want: \n", wantXML)
 	// t.Log("got: \n", gotXML)
@@ -151,7 +151,7 @@ func Test_compileExpressionList(t *testing.T) {
 `
 	testTokenizer := NewTestTokenizer(tokens)
 	compilationEngine := NewCompilationEngine(&testTokenizer)
-	compilationEngineImpl := compilationEngine.(CompilationEngineImpl)
+	compilationEngineImpl := compilationEngine.(*CompilationEngineImpl)
 	gotXML := compilationEngineImpl.compileExpressionList()
 	// t.Log("want: \n", wantXML)
 	// t.Log("got: \n", gotXML)
