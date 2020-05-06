@@ -2,6 +2,7 @@ package compilationengine
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/kaito2/nand2tetris/internal/tokenizer"
 	"github.com/kaito2/nand2tetris/internal/types"
@@ -11,9 +12,15 @@ import (
 // TODO: advance を内部で呼びまくる仕組みをどうにかできないか
 
 // *** term ( op term )* ***
-func (c *CompilationEngineImpl) compileExpression() string {
+func (c *CompilationEngineImpl) compileExpression() (xml string) {
+	defer func() {
+		if len(xml) > 0 {
+			xml = assembleMultiLineXML("expression", xml)
+		}
+	}()
+
 	// expect term
-	xml := c.compileTerm()
+	xml = c.compileTerm()
 	for {
 		if !isOpToken(c.currentToken().String) {
 			break
@@ -50,13 +57,14 @@ func isOpToken(tokenString string) bool {
 }
 
 // *** ( expression ( ',' expression )* )? ***
-func (c *CompilationEngineImpl) compileExpressionList() string {
+func (c *CompilationEngineImpl) compileExpressionList() (xml string) {
+	defer func() {
+		xml = assembleMultiLineXML("expressionList", xml)
+	}()
+
 	// expect expression
-	xml := c.compileExpression()
-	for {
-		if c.currentToken().String == "," {
-			break
-		}
+	xml = c.compileExpression()
+	for c.currentToken().String == "," {
 		// expect ','
 		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
 		c.advance()
@@ -67,34 +75,50 @@ func (c *CompilationEngineImpl) compileExpressionList() string {
 	return xml
 }
 
-func (c *CompilationEngineImpl) compileTerm() string {
+func (c *CompilationEngineImpl) compileTerm() (xml string) {
+	defer func() {
+		if len(xml) > 0 {
+			xml = assembleMultiLineXML("term", xml)
+		}
+	}()
+
 	if c.currentToken().Type == types.INT_CONST || c.currentToken().Type == types.STRING_CONST {
-		xml := assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
 		c.advance()
 		return xml
 	} else if isKeywordConstant(c.currentToken()) {
-		xml := assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
 		c.advance()
 		return xml
 	} else if c.currentToken().Type == types.SYMBOL {
 		if c.currentToken().String == "(" {
-			currentXML := assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+			// expect "("
+			xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
 			c.advance()
-			defer c.advance() // ")" が評価され終わったあとに token を進めるため
-			return currentXML +
-				c.compileExpression() +
-				// ")" is expected
-				assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+
+			// expect expression
+			xml += c.compileExpression()
+
+			// ")" is expected
+			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+			c.advance()
+			return xml
 		} else if c.currentToken().String == "~" || c.currentToken().String == "-" {
 			// `unaryOp term` pattern
-			currentXML := assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+			// expect "~" or "-"
+			xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
 			c.advance()
-			return currentXML + c.compileTerm()
+
+			// expect term
+			xml += c.compileTerm()
+			return xml
 		}
 	} else if c.currentToken().Type == types.IDENTIFIER {
+		log.Println("type.IDENTIFIER is detected (next token: ", c.nextToken(), ")")
+
 		// *** varName '['  ***
 		if c.nextToken().String == "[" {
-			xml := assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+			xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
 			c.advance()
 			// expect "["
 			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
@@ -107,7 +131,7 @@ func (c *CompilationEngineImpl) compileTerm() string {
 		}
 		// *** subroutineName '(' expression ')' ***
 		if c.nextToken().String == "(" {
-			xml := assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+			xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
 			c.advance()
 			// expect "("
 			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
@@ -120,7 +144,9 @@ func (c *CompilationEngineImpl) compileTerm() string {
 		}
 		// *** (className | varName) '.' subroutineName '(' expressionList ')'
 		if c.nextToken().String == "." {
-			xml := assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+			log.Printf("pattern: `%s` is detected\n", "(className | varName) '.' subroutineName '(' expressionList ')'")
+
+			xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
 			c.advance()
 
 			// expect "."
@@ -145,8 +171,9 @@ func (c *CompilationEngineImpl) compileTerm() string {
 			return xml
 		}
 		// *** varName ***
-		defer c.advance()
-		return assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		c.advance()
+		return xml
 	}
 	// NOTE: expressionList が呼んだ際に、 expression がなければ空を返したい。
 	return ""
@@ -154,6 +181,10 @@ func (c *CompilationEngineImpl) compileTerm() string {
 
 func assembleTermXML(tag, content string) string {
 	return fmt.Sprintf("<%s> %s </%s>\n", tag, content, tag)
+}
+
+func assembleMultiLineXML(tag, content string) string {
+	return fmt.Sprintf("<%s>\n%s</%s>\n", tag, content, tag)
 }
 
 // TODO: tokenizer 側に移植?

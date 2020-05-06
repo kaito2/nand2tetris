@@ -1,8 +1,6 @@
 package compilationengine
 
 import (
-	"fmt"
-
 	"github.com/kaito2/nand2tetris/internal/tokenizer"
 )
 
@@ -14,28 +12,31 @@ type CompilationEngine interface {
 type CompilationEngineImpl struct {
 	tokenizer tokenizer.Tokenizer
 	current   tokenizer.Token
+	hasNext   bool
 }
 
-func NewCompilationEngine(inputFilename string) (CompilationEngine, error) {
-	t, err := tokenizer.NewTokenizer(inputFilename)
-	if err != nil {
-		return CompilationEngineImpl{}, fmt.Errorf("failed to get new Tokenizer: %w", err)
-	}
-	currentToken := t.CurrentToken()
-	t.Advance()
+func NewCompilationEngine(tokenizer tokenizer.Tokenizer) CompilationEngine {
+	currentToken := tokenizer.CurrentToken()
+	hasNext := tokenizer.Advance()
 	return CompilationEngineImpl{
-		tokenizer: t,
+		tokenizer: tokenizer,
 		current:   currentToken,
-	}, nil
+		hasNext:   hasNext,
+	}
 }
 
-func (c *CompilationEngineImpl) advance() {
+func (c *CompilationEngineImpl) advance() bool {
+	if !c.hasNext {
+		c.current = tokenizer.Token{}
+		return false
+	}
 	c.current = c.tokenizer.CurrentToken()
-	c.tokenizer.Advance()
+	c.hasNext = c.tokenizer.Advance()
+	return true
 }
 
 func (c CompilationEngineImpl) currentToken() tokenizer.Token {
-	return c.currentToken()
+	return c.current
 }
 
 func (c CompilationEngineImpl) nextToken() tokenizer.Token {
