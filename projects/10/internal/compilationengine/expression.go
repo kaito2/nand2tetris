@@ -7,14 +7,64 @@ import (
 	"github.com/kaito2/nand2tetris/internal/types"
 )
 
+// TODO: string の連結よりは []string を追記したほうがヨサソウ
 // TODO: advance を内部で呼びまくる仕組みをどうにかできないか
 
+// *** term ( op term )* ***
 func (c *CompilationEngineImpl) compileExpression() string {
-	panic("not implemented")
+	// expect term
+	xml := c.compileTerm()
+	for {
+		if !isOpToken(c.currentToken().String) {
+			break
+		}
+		// expect op
+		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		c.advance()
+
+		// expect term
+		xml += c.compileTerm()
+	}
+	return xml
 }
 
+var opTokens = []string{
+	"+",
+	"-",
+	"*",
+	"/",
+	"&",
+	"|",
+	"<",
+	">",
+	"=",
+}
+
+func isOpToken(tokenString string) bool {
+	for _, opToken := range opTokens {
+		if tokenString == opToken {
+			return true
+		}
+	}
+	return false
+}
+
+// *** ( expression ( ',' expression )* )? ***
 func (c *CompilationEngineImpl) compileExpressionList() string {
-	panic("not implemented")
+	// expect expression
+	xml := c.compileExpression()
+	for {
+		if c.currentToken().String == "," {
+			break
+		}
+		// expect ','
+		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		c.advance()
+
+		// expect term
+		xml += c.compileExpression()
+	}
+	return xml
 }
 
 func (c *CompilationEngineImpl) compileTerm() string {
@@ -98,7 +148,8 @@ func (c *CompilationEngineImpl) compileTerm() string {
 		defer c.advance()
 		return assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
 	}
-	panic("unknown term")
+	// NOTE: expressionList が呼んだ際に、 expression がなければ空を返したい。
+	return ""
 }
 
 func assembleTermXML(tag, content string) string {
