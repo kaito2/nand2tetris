@@ -75,6 +75,54 @@ func (c *CompilationEngineImpl) compileExpressionList() (xml string) {
 	return xml
 }
 
+func (c *CompilationEngineImpl) compileSubroutineCall() (xml string) {
+	// *** subroutineName '(' expression ')' ***
+	if c.nextToken().String == "(" {
+		xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		c.advance()
+		// expect "("
+		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		c.advance()
+
+		xml += c.compileExpressionList()
+
+		// expect ")"
+		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		c.advance()
+		return
+	}
+	// *** (className | varName) '.' subroutineName '(' expressionList ')'
+	if c.nextToken().String == "." {
+		log.Printf("pattern: `%s` is detected\n", "(className | varName) '.' subroutineName '(' expressionList ')'")
+
+		xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		c.advance()
+
+		// expect "."
+		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		c.advance()
+
+		// expect identifier (subroutineName)
+		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		c.advance()
+
+		// expect "("
+		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		c.advance()
+
+		// expect expressionList
+		xml += c.compileExpressionList()
+
+		// expect ")"
+		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+		c.advance()
+
+		return
+	}
+	log.Fatalf("unknown pattern (current: %v)\n", c.currentToken())
+	return
+}
+
 func (c *CompilationEngineImpl) compileTerm() (xml string) {
 	defer func() {
 		if len(xml) > 0 {
@@ -129,46 +177,9 @@ func (c *CompilationEngineImpl) compileTerm() (xml string) {
 			c.advance()
 			return xml
 		}
-		// *** subroutineName '(' expression ')' ***
-		if c.nextToken().String == "(" {
-			xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
-			// expect "("
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
-			xml += c.compileExpression()
-			// expect ")"
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
-			return xml
-		}
-		// *** (className | varName) '.' subroutineName '(' expressionList ')'
-		if c.nextToken().String == "." {
-			log.Printf("pattern: `%s` is detected\n", "(className | varName) '.' subroutineName '(' expressionList ')'")
-
-			xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
-
-			// expect "."
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
-
-			// expect identifier (subroutineName)
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
-
-			// expect "("
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
-
-			// expect expressionList
-			xml += c.compileExpressionList()
-
-			// expect ")"
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
-
-			return xml
+		if c.nextToken().String == "(" || c.nextToken().String == "." {
+			xml += c.compileSubroutineCall()
+			return
 		}
 		// *** varName ***
 		xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)

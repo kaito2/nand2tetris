@@ -52,3 +52,67 @@ func Test_compileReturn(t *testing.T) {
 		assert.Equal(t, c.wantXML, gotXML)
 	}
 }
+
+func Test_compileDoStatement(t *testing.T) {
+	cases := []struct {
+		tokens  []tokenizer.Token
+		wantXML string
+	}{
+		{
+			[]tokenizer.Token{
+				{"do", types.KEYWORD},
+				{"draw", types.IDENTIFIER},
+				{"(", types.SYMBOL},
+				{")", types.SYMBOL},
+				{";", types.SYMBOL},
+			},
+			`<doStatement>
+<keyword> do </keyword>
+<identifier> draw </identifier>
+<symbol> ( </symbol>
+<expressionList>
+</expressionList>
+<symbol> ) </symbol>
+<symbol> ; </symbol>
+</doStatement>
+`,
+		},
+		{
+			[]tokenizer.Token{
+				{"do", types.KEYWORD},
+				{"Memory", types.IDENTIFIER},
+				{".", types.SYMBOL},
+				{"deAlloc", types.IDENTIFIER},
+				{"(", types.SYMBOL},
+				{"this", types.KEYWORD},
+				{")", types.SYMBOL},
+				{";", types.SYMBOL},
+			},
+			`<doStatement>
+<keyword> do </keyword>
+<identifier> Memory </identifier>
+<symbol> . </symbol>
+<identifier> deAlloc </identifier>
+<symbol> ( </symbol>
+<expressionList>
+<expression>
+<term>
+<keyword> this </keyword>
+</term>
+</expression>
+</expressionList>
+<symbol> ) </symbol>
+<symbol> ; </symbol>
+</doStatement>
+`,
+		},
+	}
+
+	for _, c := range cases {
+		testTokenizer := NewTestTokenizer(c.tokens)
+		compilationEngine := NewCompilationEngine(&testTokenizer)
+		compilationEngineImpl := compilationEngine.(CompilationEngineImpl)
+		gotXML := compilationEngineImpl.compileDoStatement()
+		assert.Equal(t, c.wantXML, gotXML)
+	}
+}

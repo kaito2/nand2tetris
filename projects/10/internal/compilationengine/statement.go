@@ -18,3 +18,22 @@ func (c *CompilationEngineImpl) compileReturn() (xml string) {
 
 	return
 }
+
+func (c *CompilationEngineImpl) compileDoStatement() (xml string) {
+	defer func() {
+		xml = assembleMultiLineXML("doStatement", xml)
+	}()
+
+	// expect 'do'
+	xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+	c.advance()
+
+	// expect subroutineCall
+	xml += c.compileSubroutineCall()
+
+	// expect ';'
+	xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+	c.advance()
+
+	return
+}
