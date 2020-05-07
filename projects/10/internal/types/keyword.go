@@ -60,13 +60,3 @@ func isKeyword(s string) bool {
 	}
 	return false
 }
-
-func GetKeyword(s string) Keyword {
-	for _, keyword := range allKeywords {
-		if Keyword(s) == keyword {
-			return keyword
-		}
-	}
-	// TODO: error handling
-	panic("unknown keyword")
-}
