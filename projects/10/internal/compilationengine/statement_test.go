@@ -3,6 +3,8 @@ package compilationengine
 import (
 	"testing"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/kaito2/nand2tetris/internal/tokenizer"
 	"github.com/kaito2/nand2tetris/internal/types"
 
@@ -46,6 +48,7 @@ func Test_compileReturn(t *testing.T) {
 
 	for _, c := range cases {
 		testTokenizer := NewTestTokenizer(c.tokens)
+		logrus.Debug(testTokenizer)
 		compilationEngine := NewCompilationEngine(&testTokenizer)
 		compilationEngineImpl := compilationEngine.(*CompilationEngineImpl)
 		gotXML := compilationEngineImpl.compileReturn()
