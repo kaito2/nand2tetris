@@ -173,6 +173,12 @@ func (c *CompilationEngineImpl) compileParameterList() (xml string) {
 }
 
 func (c *CompilationEngineImpl) compileVarDec() (xml string) {
+	defer func() {
+		if len(xml) > 0 {
+			xml = assembleMultiLineXML("varDec", xml)
+		}
+	}()
+
 	if c.currentToken().String == "var" {
 		// expect 'var'
 		xml += c.compileTerminal()
