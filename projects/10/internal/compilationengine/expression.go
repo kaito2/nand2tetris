@@ -26,8 +26,7 @@ func (c *CompilationEngineImpl) compileExpression() (xml string) {
 			break
 		}
 		// expect op
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect term
 		xml += c.compileTerm()
@@ -66,8 +65,7 @@ func (c *CompilationEngineImpl) compileExpressionList() (xml string) {
 	xml = c.compileExpression()
 	for c.currentToken().String == "," {
 		// expect ','
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect term
 		xml += c.compileExpression()
@@ -78,44 +76,36 @@ func (c *CompilationEngineImpl) compileExpressionList() (xml string) {
 func (c *CompilationEngineImpl) compileSubroutineCall() (xml string) {
 	// *** subroutineName '(' expression ')' ***
 	if c.nextToken().String == "(" {
-		xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml = c.compileTerminal()
 		// expect "("
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		xml += c.compileExpressionList()
 
 		// expect ")"
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 		return
 	}
 	// *** (className | varName) '.' subroutineName '(' expressionList ')'
 	if c.nextToken().String == "." {
 		log.Printf("pattern: `%s` is detected\n", "(className | varName) '.' subroutineName '(' expressionList ')'")
 
-		xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml = c.compileTerminal()
 
 		// expect "."
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect identifier (subroutineName)
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect "("
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect expressionList
 		xml += c.compileExpressionList()
 
 		// expect ")"
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		return
 	}
@@ -131,31 +121,26 @@ func (c *CompilationEngineImpl) compileTerm() (xml string) {
 	}()
 
 	if c.currentToken().Type == types.INT_CONST || c.currentToken().Type == types.STRING_CONST {
-		xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml = c.compileTerminal()
 		return xml
 	} else if isKeywordConstant(c.currentToken()) {
-		xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml = c.compileTerminal()
 		return xml
 	} else if c.currentToken().Type == types.SYMBOL {
 		if c.currentToken().String == "(" {
 			// expect "("
-			xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
+			xml = c.compileTerminal()
 
 			// expect expression
 			xml += c.compileExpression()
 
 			// ")" is expected
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
+			xml += c.compileTerminal()
 			return xml
 		} else if c.currentToken().String == "~" || c.currentToken().String == "-" {
 			// `unaryOp term` pattern
 			// expect "~" or "-"
-			xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
+			xml = c.compileTerminal()
 
 			// expect term
 			xml += c.compileTerm()
@@ -166,15 +151,12 @@ func (c *CompilationEngineImpl) compileTerm() (xml string) {
 
 		// *** varName '['  ***
 		if c.nextToken().String == "[" {
-			xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
+			xml = c.compileTerminal()
 			// expect "["
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
+			xml += c.compileTerminal()
 			xml += c.compileExpression()
 			// expect "]"
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
+			xml += c.compileTerminal()
 			return xml
 		}
 		if c.nextToken().String == "(" || c.nextToken().String == "." {
@@ -182,12 +164,18 @@ func (c *CompilationEngineImpl) compileTerm() (xml string) {
 			return
 		}
 		// *** varName ***
-		xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml = c.compileTerminal()
 		return xml
 	}
 	// NOTE: expressionList が呼んだ際に、 expression がなければ空を返したい。
 	return ""
+}
+
+// REVIEW: compileTerm() とややこしい?
+func (c *CompilationEngineImpl) compileTerminal() (xml string) {
+	xml = assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
+	c.advance()
+	return xml
 }
 
 func assembleTermXML(tag, content string) string {
