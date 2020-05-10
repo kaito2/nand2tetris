@@ -36,6 +36,7 @@ func (c *CompilationEngineImpl) compileReturn() (xml string) {
 	}()
 
 	// expect 'return'
+	compareDebugLog("return", c.currentToken().String)
 	xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
 	c.advance()
 
