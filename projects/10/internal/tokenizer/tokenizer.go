@@ -2,6 +2,7 @@ package tokenizer
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -31,11 +32,15 @@ func NewTokenizer(inputFilename string) (Tokenizer, error) {
 		return &TokenizerImpl{}, fmt.Errorf("failed to os.Open: %w", err)
 	}
 	scanner := bufio.NewScanner(file)
-	return &TokenizerImpl{
+	tokenizerImpl := &TokenizerImpl{
 		inputFilename: inputFilename,
 		inputFile:     file,
 		scanner:       scanner,
-	}, nil
+	}
+	if !tokenizerImpl.Advance() {
+		return nil, errors.New(fmt.Sprintf("File(%s) doesn't have enough token", inputFilename))
+	}
+	return tokenizerImpl, nil
 }
 
 func (t TokenizerImpl) CurrentToken() Token {

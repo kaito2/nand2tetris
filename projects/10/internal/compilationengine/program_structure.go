@@ -54,36 +54,29 @@ func (c *CompilationEngineImpl) compileClassVarDec() (xml string) {
 	if c.currentToken().String == "static" || c.currentToken().String == "field" {
 		// expect 'static' or 'field'
 		log.Printf("want: %s, got: %s\n", "'static' or 'field'", c.currentToken().String)
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect type
 		log.Printf("want: %s, got: %s\n", "type", c.currentToken().String)
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect varName (identifier)
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		for c.currentToken().String == "," {
 			// expect ','
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
+			xml += c.compileTerminal()
 
 			// expect type
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
+			xml += c.compileTerminal()
 
 			// expect varName
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
+			xml += c.compileTerminal()
 		}
 
 		// expect ';'
 		assert.Equal(&testing.T{}, c.currentToken().String, ";")
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 	}
 	return
 }
@@ -98,28 +91,23 @@ func (c *CompilationEngineImpl) compileSubroutineDec() (xml string) {
 	token := c.currentToken().String
 	if token == "constructor" || token == "function" || token == "method" {
 		// expect 'constructor' or 'function' or 'method'
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// REVIEW: type も終端として処理している
 		// expect 'void' or type
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect subroutineName (identifier)
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect '('
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect parameterList
 		xml += c.compileParameterList()
 
 		// expect ')'
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect subroutineBody
 		xml += c.compileSubroutineBody()
@@ -172,49 +160,46 @@ func (c *CompilationEngineImpl) compileParameterList() (xml string) {
 
 	for c.currentToken().String == "," {
 		// expect ','
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect type
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect varName (identifier)
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 	}
 
 	return
 }
 
 func (c *CompilationEngineImpl) compileVarDec() (xml string) {
+	defer func() {
+		if len(xml) > 0 {
+			xml = assembleMultiLineXML("varDec", xml)
+		}
+	}()
+
 	if c.currentToken().String == "var" {
 		// expect 'var'
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect type
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect varName (identifier)
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect (',' varName)*
 		for c.currentToken().String == "," {
 			// expect ','
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
+			xml += c.compileTerminal()
 
 			// expect varName (identifier)
-			xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-			c.advance()
+			xml += c.compileTerminal()
 		}
 
 		// expect ';'
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 	}
 	return
 }

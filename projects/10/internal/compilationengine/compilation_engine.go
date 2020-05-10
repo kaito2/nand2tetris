@@ -19,7 +19,7 @@ type CompilationEngineImpl struct {
 
 func NewCompilationEngine(tokenizer tokenizer.Tokenizer) CompilationEngine {
 	// TODO: tokenizer側で初期化時に currentToken をセットするように修正
-	tokenizer.Advance()
+	// tokenizer.Advance()
 
 	currentToken := tokenizer.CurrentToken()
 	hasNext := tokenizer.Advance()

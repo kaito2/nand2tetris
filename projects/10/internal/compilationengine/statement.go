@@ -44,6 +44,7 @@ func (c *CompilationEngineImpl) compileReturn() (xml string) {
 	xml += c.compileExpression()
 
 	// expect ';'
+	compareDebugLog(";", c.currentToken().String)
 	xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
 	c.advance()
 
@@ -130,15 +131,13 @@ func (c *CompilationEngineImpl) compileLetStatement() (xml string) {
 
 	if c.currentToken().String == "[" {
 		// expect '['
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 
 		// expect expression
 		xml += c.compileExpression()
 
 		// expect ']'
-		xml += assembleTermXML(c.currentToken().TypeString(), c.currentToken().String)
-		c.advance()
+		xml += c.compileTerminal()
 	}
 
 	// expect '='
