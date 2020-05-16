@@ -1,5 +1,14 @@
 package types
 
+type Ident int
+
+const (
+	Static Ident = iota
+	Field
+	Argument
+	Var
+)
+
 // Check s is valid identifier token
 func IsIdentifier(s string) bool {
 	if isDigit(int32(s[0])) {
