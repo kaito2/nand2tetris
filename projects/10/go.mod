@@ -9,6 +9,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/onsi/gomega v1.10.0 // indirect
+	github.com/pkg/errors v0.8.0
 	github.com/sergi/go-diff v1.1.0
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/cobra v1.0.0
